@@ -1,0 +1,158 @@
+﻿@*model IEnumerable<empleados.Models.empleado>*@
+
+
+
+<div style="padding-top:20px">
+
+    <form role="form">
+        <div class="row">
+
+            <div class="col-lg-12">
+                <div class="panel panel-default">
+                    <div class="panel-heading">
+                        <div class="titlepanel">Datos del empleado</div>
+                    </div>
+                    <div class="panel-body">
+                        <div class="row">
+                            <div class="col-lg-6">
+                                <input type="hidden" id="id" name="id" value="0"/>
+                                <div class="form-group">
+                                    <label for="nombres">Nombres</label>
+                                    <input name="nombres" id="nombres" class="form-control" value="">
+                                </div>
+                                <div class="form-group">
+                                    <label for="apellidos">Apellidos</label>
+                                    <input name="apellidos" id="apellidos" class="form-control" value="">
+                                </div>
+                            </div>
+                            <!-- /.col-lg-6 (nested) -->
+                            <div class="col-lg-6">
+                                <div class="form-group">
+                                    <label for="cedula">Cedula</label>
+                                    <input name="cedula" id="cedula" class="form-control" value="">
+                                </div>
+                            </div>
+
+                            <div class="col-lg-6">
+                                <div class="form-group">
+                                    <label for="telefono">Telefono</label>
+                                    <input name="telefono" id="telefono" class="form-control" value="">
+                                </div>
+                            </div>
+                            <!-- /.col-lg-6 (nested) -->
+                        </div>
+                        <div>
+                           
+                            <button type="button" class="btn btn-default" onclick="findEmployee()">Buscar</button>
+                            <button type="button" class="btn btn-default" onclick="register()">Guardar</button>
+                            <button type="button" class="btn btn-default" onclick="newEmployee()">Crear Nuevo</button>
+                            <button type="button" class="btn btn-default" onclick=" window.history.back();">Regresar</button>
+                        </div>
+                        <!-- /.row (nested) -->
+                    </div>
+                    <!-- /.panel-body -->
+
+                </div>
+                <!-- /.panel -->
+                <div style="padding: 10px" id='userList'>
+                </div>
+
+            </div>
+            <!-- /.col-lg-12 -->
+        </div>
+    </form>
+    <div id="employeeList"></div>
+        <script type="text/javascript">
+        function findEmployee() {
+            $("#employeeList").html('<table id="example" class="table table-bordered table-hover table-striped" cellspacing="0" width="100%">' +
+                    '<thead>' +
+                        '<tr>' +
+                            '<th></th>' +
+                            '<th>Cedula</th>' +
+                            '<th>Nombres</th>' +
+                            '<th>Apellidos</th>' +
+                            '<th>Telefono</th>' +
+                        '</tr>' +
+                    '</thead>' +
+                '</table>');
+            document.getElementById("employeeList").className = "table-responsive panel panel-default";
+            var nombres = $("#nombres").val();
+            var apellidos = $("#apellidos").val();
+            var cedula = $("#cedula").val();
+            var telefono = $("#telefono").val();
+            var url = "FindEmployee?nombres=" + nombres + "&apellidos=" + apellidos + "&cedula=" + cedula + "&telefono=" + telefono;
+            find(url, "example", userClick, [{
+                "data": "id",
+                "render": function (data, type, full, meta) {
+                    return '<a id="dbtn.' + data + '" class="btn btn-default rolloverBtn" role="button"><span><i class="fa fa-wpforms fa-fw"></i></span></a>';
+                }
+            },
+                            { "data": "cedula" },
+                            { "data": "nombres" },
+                            { "data": "apellidos" },
+                            { "data": "telefono" }]);
+        }
+        function userClick(data) {
+            $.ajax({
+                type: "GET",
+                url: "getEmployeeById",
+                data: {
+                    id: data
+                },
+                contentType: "application/json; charset=utf-8",
+                dataType: "json",
+                success: function (response) {
+                    $("#id").val(data);
+                    $("#cedula").val(response[0].cedula);
+                    $("#nombres").val(response[0].nombres);
+                    $("#apellidos").val(response[0].apellidos);
+                    $("#telefono").val(response[0].telefono);
+                }
+            });
+        }
+
+        function defaultLabel() {
+            $("label[for='nombres']").html("Nombres");
+            $("label[for='apellidos']").html("Apellidos");
+            $("label[for='cedula']").html("Cedula");
+            $("label[for='telefono']").html("Telefono");
+            $("label").attr('class', '');
+        }
+        function register() {
+            defaultLabel();
+            $.ajax({
+                type: "POST",
+                url: "RegisterEmployee",
+                data: JSON.stringify({
+                    id: $("#id").val(), nombres: $("#nombres").val(), apellidos: $("#apellidos").val(), cedula: $("#cedula").val(), telefono: $("#telefono").val()
+                }),
+                contentType: "application/json; charset=utf-8",
+                dataType: "json",
+                success: function (response) {
+                    for (var i = 0; i < response.length; i++) {
+                        var error = response[i];
+                        var fieldKey = error.Key;
+                        var message = error.Message;
+                        $("label[for='" + fieldKey + "']").html(message);
+                        $("label[for='" + fieldKey + "']").attr('class', 'error');
+                    }
+
+                    if (response.length === undefined) {
+                        newEmployee();
+                        findEmployee();
+                    }
+                }
+            });
+        }
+
+        function newEmployee() {
+            $("#id").val("0");
+            $("#cedula").val("");
+            $("#nombres").val("");
+            $("#apellidos").val("");
+            $("#telefono").val("");
+            defaultLabel();
+        }
+        </script>
+
+                
